@@ -52,7 +52,7 @@
 ## 目录结构
 
 ```text
-magnet-search/
+magnet-fix/
 ├── app.py
 ├── config.py
 ├── database.py
@@ -82,8 +82,8 @@ magnet-search/
 ### 方式一：Docker Compose
 
 ```bash
-git clone <your-repo-url> magnet-search
-cd magnet-search
+git clone <your-repo-url> magnet-fix
+cd magnet-fix
 
 # 仅启动搜索站点（默认 SQLite）
 docker compose up -d --build
