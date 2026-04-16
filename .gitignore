@@ -1,0 +1,25 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.env
+.vscode/
+.idea/
+.DS_Store
+
+# Runtime data
+data/*
+!data/.gitkeep
+
+# Local downloader data
+qbittorrent/config/
+qbittorrent/downloads/
+
+# Build and package artifacts
+*.zip
+*.tar.gz
+
+# Temporary files
+*.log
+*.tmp

@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 磁力搜索</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --accent: #818cf8;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --bg-input: #0b1220;
+            --text: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --shadow: rgba(15, 23, 42, 0.35);
+            --green: #34d399;
+            --red: #f87171;
+            --yellow: #fbbf24;
+            --orange: #fb923c;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            min-height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        a { color: inherit; }
+
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: radial-gradient(circle at top, rgba(99, 102, 241, 0.18), transparent 42%), var(--bg);
+            z-index: 1000;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 18px 40px var(--shadow);
+        }
+
+        .login-box h2 {
+            font-size: 1.6rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .login-box p {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            line-height: 1.7;
+            margin-bottom: 1.25rem;
+        }
+
+        .admin-layout { display: none; }
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 248px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 1.25rem 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-logo {
+            padding: 0 1.25rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .sidebar-logo svg { width: 24px; height: 24px; }
+
+        .sidebar-nav { list-style: none; }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.8rem 1.25rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            color: var(--text);
+            background: rgba(99, 102, 241, 0.12);
+            border-left-color: var(--accent);
+        }
+
+        .sidebar-nav svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+        .sidebar-footer {
+            margin-top: 1rem;
+            padding: 0 1rem;
+        }
+
+        .sidebar-footer a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+        }
+
+        .main-content {
+            margin-left: 248px;
+            padding: 1.5rem;
+            min-height: 100vh;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .page-title {
+            font-size: 1.55rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+        }
+
+        .page-desc {
+            margin-top: -0.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 12px 28px var(--shadow);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .card-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.84rem;
+            line-height: 1.7;
+            margin-top: -0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+
+        .stat-card .label {
+            font-size: 0.84rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .value.accent { color: var(--accent); }
+        .value.green { color: var(--green); }
+        .value.yellow { color: var(--yellow); }
+        .value.orange { color: var(--orange); }
+        .value.red { color: var(--red); }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            min-width: 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.42rem;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.72rem 0.85rem;
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            background: var(--bg-input);
+            color: var(--text);
+            font-size: 0.92rem;
+            outline: none;
+        }
+
+        .form-group textarea {
+            min-height: 92px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.12);
+        }
+
+        .form-help {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            line-height: 1.6;
+            margin-top: 0.42rem;
+        }
+
+        .checkbox-inline {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding-top: 0.3rem;
+            color: var(--text);
+            font-size: 0.92rem;
+        }
+
+        .checkbox-inline input {
+            width: auto;
+            accent-color: var(--accent);
+        }
+
+        .slider-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+        }
+
+        .slider-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 54px;
+            text-align: right;
+        }
+
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .save-btn,
+        .batch-delete,
+        .ghost-btn,
+        .danger-btn,
+        .ctrl-btn {
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.1rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .save-btn {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .save-btn:hover { background: var(--primary-hover); }
+
+        .ghost-btn {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .ghost-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .danger-btn,
+        .batch-delete {
+            background: transparent;
+            color: var(--red);
+            border: 1px solid rgba(248, 113, 113, 0.5);
+        }
+
+        .danger-btn:hover,
+        .batch-delete:hover {
+            background: rgba(248, 113, 113, 0.12);
+        }
+
+        .ctrl-btn.start {
+            background: rgba(52, 211, 153, 0.16);
+            color: var(--green);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+        }
+
+        .ctrl-btn.stop {
+            background: rgba(248, 113, 113, 0.14);
+            color: var(--red);
+            border: 1px solid rgba(248, 113, 113, 0.35);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            border-radius: 999px;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .status-badge.running {
+            background: rgba(52, 211, 153, 0.14);
+            color: var(--green);
+        }
+
+        .status-badge.stopped {
+            background: rgba(248, 113, 113, 0.14);
+            color: var(--red);
+        }
+
+        .status-text {
+            color: var(--text-secondary);
+            font-size: 0.84rem;
+        }
+
+        .crawler-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .crawler-stat-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 0.85rem;
+            padding: 0.8rem;
+            text-align: center;
+        }
+
+        .crawler-stat-item .num {
+            font-size: 1.18rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .crawler-stat-item .label {
+            margin-top: 0.35rem;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+        }
+
+        .theme-preview {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px dashed var(--border);
+            border-radius: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .theme-preview-chip {
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            border: 3px solid rgba(255,255,255,0.12);
+            background: var(--primary);
+        }
+
+        .theme-preview p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 0.88rem;
+        }
+
+        .table-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .table-search {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 720px;
+        }
+
+        .table-search input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.72rem 0.85rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text);
+        }
+
+        .table-wrap {
+            overflow: auto;
+            border-radius: 0.85rem;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 920px;
+        }
+
+        .data-table th,
+        .data-table td {
+            text-align: left;
+            padding: 0.8rem 0.85rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.88rem;
+        }
+
+        .data-table th {
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.03);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .data-table tbody tr:hover td {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .name-cell {
+            max-width: 340px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .hash-cell {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            color: var(--text-secondary);
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .checkbox-cell input {
+            accent-color: var(--accent);
+        }
+
+        .del-btn {
+            padding: 0.45rem 0.75rem;
+            background: transparent;
+            color: var(--red);
+            border: 1px solid rgba(248, 113, 113, 0.5);
+            border-radius: 0.55rem;
+            cursor: pointer;
+        }
+
+        .table-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            margin-top: 1rem;
+        }
+
+        .table-pagination .info {
+            color: var(--text-secondary);
+            font-size: 0.84rem;
+        }
+
+        .table-pagination .pages {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .table-pagination button {
+            padding: 0.45rem 0.8rem;
+            border-radius: 0.55rem;
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .table-pagination button.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .table-pagination button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .inline-status {
+            padding: 0.75rem 0.9rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+
+        .inline-status.success { color: var(--green); border-color: rgba(52, 211, 153, 0.35); }
+        .inline-status.error { color: var(--red); border-color: rgba(248, 113, 113, 0.35); }
+
+        .tips-list {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            line-height: 1.9;
+            padding-left: 1.1rem;
+        }
+
+        .tips-list li + li { margin-top: 0.25rem; }
+
+        .hide { display: none !important; }
+
+        .toast {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            padding: 0.85rem 1rem;
+            border-radius: 0.85rem;
+            background: var(--bg-card);
+            color: var(--green);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            box-shadow: 0 14px 28px var(--shadow);
+            transform: translateY(120px);
+            opacity: 0;
+            transition: all 0.25s ease;
+            z-index: 1200;
+            max-width: min(92vw, 420px);
+            line-height: 1.7;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            color: var(--red);
+            border-color: rgba(248, 113, 113, 0.35);
+        }
+
+        @media (max-width: 980px) {
+            .grid-2,
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 860px) {
+            .sidebar {
+                width: 72px;
+            }
+
+            .sidebar-logo span,
+            .sidebar-nav a span,
+            .sidebar-footer span {
+                display: none;
+            }
+
+            .sidebar-nav a,
+            .sidebar-footer a {
+                justify-content: center;
+            }
+
+            .main-content {
+                margin-left: 72px;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .login-box,
+            .card {
+                border-radius: 0.9rem;
+            }
+
+            .page-title {
+                font-size: 1.3rem;
+            }
+
+            .table-search,
+            .btn-row {
+                width: 100%;
+            }
+
+            .table-search input,
+            .save-btn,
+            .ghost-btn,
+            .danger-btn,
+            .batch-delete,
+            .ctrl-btn {
+                width: 100%;
+            }
+
+            .table-pagination {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .theme-preview {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <h2>管理后台</h2>
+        <p>支持数据库切换、爬虫吞吐配置、主题色与明暗模式、qBittorrent 联动以及磁力批量清理。</p>
+        <input type="password" id="loginPassword" placeholder="请输入管理密码" autofocus>
+        <button class="save-btn" onclick="doLogin()">登 录</button>
+        <div class="inline-status error hide" id="loginError" style="margin-top:1rem">密码错误，请重试。</div>
+    </div>
+</div>
+
+<div class="admin-layout" id="adminLayout">
+    <nav class="sidebar">
+        <div class="sidebar-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"></path>
+            </svg>
+            <span>磁力搜索</span>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="#" class="active" onclick="switchPage('dashboard', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+                <span>仪表盘</span>
+            </a></li>
+            <li><a href="#" onclick="switchPage('crawler', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+                <span>DHT 爬虫</span>
+            </a></li>
+            <li><a href="#" onclick="switchPage('magnets', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                <span>磁力管理</span>
+            </a></li>
+            <li><a href="#" onclick="switchPage('settings', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span>系统设置</span>
+            </a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <a href="/">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"></path></svg>
+                <span>返回首页</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="page active" id="page-dashboard">
+            <h1 class="page-title">仪表盘</h1>
+            <p class="page-desc">查看数据库规模、爬虫状态和当前主题及数据库运行信息。</p>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="label">总磁力数</div><div class="value accent" id="dashTotal">0</div></div>
+                <div class="stat-card"><div class="label">今日新增</div><div class="value green" id="dashToday">0</div></div>
+                <div class="stat-card"><div class="label">数据库大小</div><div class="value yellow" id="dashDbSize">-</div></div>
+                <div class="stat-card"><div class="label">爬虫状态</div><div class="value orange" id="dashCrawlerStatus">-</div></div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">当前主题</div>
+                    <div class="theme-preview">
+                        <div>
+                            <div style="font-weight:700;margin-bottom:0.35rem" id="dashThemeMode">-</div>
+                            <p>前台与后台共用主题色和明暗模式配置，移动端与桌面端将同步生效。</p>
+                        </div>
+                        <div class="theme-preview-chip" id="dashThemeChip"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">数据库运行信息</div>
+                    <div class="inline-status" id="dashDbRuntime">尚未加载</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-crawler">
+            <h1 class="page-title">DHT 爬虫</h1>
+            <p class="page-desc">在这里调节吞吐、容量限制和入库过滤规则。数据库超过容量上限后，爬虫会自动停止。</p>
+            <div class="card">
+                <div class="card-title">
+                    <span>实时状态</span>
+                    <span class="status-badge stopped" id="crawlerBadge">已停止</span>
+                </div>
+                <div class="btn-row" style="margin-bottom:1rem">
+                    <button class="ctrl-btn start" id="btnStart" onclick="startCrawler()">启动爬虫</button>
+                    <button class="ctrl-btn stop hide" id="btnStop" onclick="stopCrawler()">停止爬虫</button>
+                    <div class="status-text" id="crawlerStatusText">等待加载状态...</div>
+                </div>
+                <div class="crawler-stats">
+                    <div class="crawler-stat-item"><div class="num" id="csDiscovered">0</div><div class="label">发现 Hash</div></div>
+                    <div class="crawler-stat-item"><div class="num" id="csSaved">0</div><div class="label">已保存</div></div>
+                    <div class="crawler-stat-item"><div class="num" id="csDuplicates">0</div><div class="label">重复跳过</div></div>
+                    <div class="crawler-stat-item"><div class="num" id="csMetaOk">0</div><div class="label">Metadata 成功</div></div>
+                    <div class="crawler-stat-item"><div class="num" id="csMetaFail">0</div><div class="label">Metadata 失败</div></div>
+                    <div class="crawler-stat-item"><div class="num" id="csQueue">0</div><div class="label">正在获取</div></div>
+                    <div class="crawler-stat-item"><div class="num" id="csPending">0</div><div class="label">待处理</div></div>
+                    <div class="crawler-stat-item"><div class="num" id="csDhtNodes">0</div><div class="label">DHT 节点</div></div>
+                    <div class="crawler-stat-item"><div class="num" id="csErrors">0</div><div class="label">错误数</div></div>
+                    <div class="crawler-stat-item"><div class="num" id="csStartTime">-</div><div class="label">启动时间</div></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">性能与入库规则</div>
+                <div class="card-subtitle">当 CPU 拉满时，程序会更积极地扩展 metadata 并发与调度强度。这里的工作线程数是基础并发，实际吞吐会随 CPU 限制联动放大。</div>
+                <div class="form-group">
+                    <label>CPU 使用限制</label>
+                    <div class="slider-group">
+                        <input type="range" id="cpuLimit" min="10" max="100" step="10" value="50">
+                        <span class="slider-value" id="cpuValue">50%</span>
+                    </div>
+                    <div class="form-help">100% 时会启用更积极的 metadata 抓取和回退策略，以提升整体资源占用与处理速度。</div>
+                </div>
+                <div class="form-group">
+                    <label>基础工作线程数</label>
+                    <div class="slider-group">
+                        <input type="range" id="maxWorkers" min="1" max="32" step="1" value="5">
+                        <span class="slider-value" id="workersValue">5</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>数据库大小限制（GB）</label>
+                        <input type="number" id="dbSizeLimitGb" min="0" step="0.1" placeholder="0 表示不限制">
+                        <div class="form-help">数据库体积超过此值后，系统将自动停止爬虫，避免持续膨胀。</div>
+                    </div>
+                    <div class="form-group">
+                        <label>保存时关键词过滤</label>
+                        <textarea id="saveFilterKeywords" placeholder="多个关键词可用换行、逗号或空格分隔，例如：广告 无码 试看"></textarea>
+                        <div class="form-help">标题命中关键词时将直接跳过保存。</div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>保存最小文件大小（MB）</label>
+                        <input type="number" id="saveFilterMinSizeMb" min="0" step="1" placeholder="0 表示不限制">
+                    </div>
+                    <div class="form-group">
+                        <label>保存最大文件大小（GB）</label>
+                        <input type="number" id="saveFilterMaxSizeGb" min="0" step="0.1" placeholder="0 表示不限制">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="save-btn" onclick="saveCrawlerConfig()">保存爬虫配置</button>
+                    <button class="ghost-btn" onclick="loadCrawlerConfig()">重新加载当前配置</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-magnets">
+            <h1 class="page-title">磁力管理</h1>
+            <p class="page-desc">支持按关键词搜索浏览，也支持按关键词、时间和大小规则批量清理历史磁力记录。</p>
+            <div class="card">
+                <div class="card-title">列表浏览与勾选删除</div>
+                <div class="table-toolbar">
+                    <div class="table-search">
+                        <input type="text" id="magnetSearch" placeholder="输入关键词搜索磁力标题或 Hash">
+                        <button class="save-btn" onclick="loadMagnets(1)">搜索</button>
+                    </div>
+                    <button class="batch-delete hide" id="batchDeleteBtn" onclick="batchDelete()">删除选中（<span id="selectedCount">0</span>）</button>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th class="checkbox-cell"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                                <th>ID</th>
+                                <th>名称</th>
+                                <th>Hash</th>
+                                <th>大小</th>
+                                <th>文件数</th>
+                                <th>热度</th>
+                                <th>时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="magnetTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="table-pagination" id="magnetPagination"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">按规则批量删除</div>
+                <div class="card-subtitle">至少填写一个条件后才能执行删除。多个条件会组合生效，仅删除符合条件的磁力。</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>关键词</label>
+                        <input type="text" id="deleteKeyword" placeholder="标题包含指定关键词">
+                    </div>
+                    <div class="form-group">
+                        <label>删除指定时间之前</label>
+                        <input type="datetime-local" id="deleteBefore">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>最小文件大小（MB）</label>
+                        <input type="number" id="deleteMinSizeMb" min="0" step="1" placeholder="可选">
+                    </div>
+                    <div class="form-group">
+                        <label>最大文件大小（GB）</label>
+                        <input type="number" id="deleteMaxSizeGb" min="0" step="0.1" placeholder="可选">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="danger-btn" onclick="deleteByRules()">执行规则删除</button>
+                    <button class="ghost-btn" onclick="resetDeleteRules()">清空规则</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-settings">
+            <h1 class="page-title">系统设置</h1>
+            <p class="page-desc">统一管理主题、数据库、qBittorrent 与管理员账号等配置。</p>
+            <div class="card">
+                <div class="card-title">站点主题</div>
+                <div class="theme-preview">
+                    <div>
+                        <div style="font-weight:700;margin-bottom:0.35rem">统一主题色与明暗模式</div>
+                        <p>设置会同时应用于前台搜索页和后台管理页，移动端和桌面端保持一致。</p>
+                    </div>
+                    <div class="theme-preview-chip" id="themePreviewChip"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>主题色</label>
+                        <input type="color" id="themeColor" value="#4f46e5" style="height:48px;padding:0.3rem">
+                    </div>
+                    <div class="form-group">
+                        <label>显示模式</label>
+                        <select id="themeMode">
+                            <option value="dark">黑夜模式</option>
+                            <option value="light">白天模式</option>
+                            <option value="auto">跟随系统</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="save-btn" onclick="saveSiteSettings()">保存主题设置</button>
+                    <button class="ghost-btn" onclick="loadSiteSettings()">重新读取</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">数据库配置</div>
+                <div class="inline-status" id="dbRuntimeStatus">尚未加载数据库配置。</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>数据库类型</label>
+                        <select id="dbBackend" onchange="toggleDatabaseBackendFields()">
+                            <option value="sqlite">内置 SQLite</option>
+                            <option value="mysql">MySQL</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>SQLite 数据库路径</label>
+                        <input type="text" id="dbSqlitePath" placeholder="例如 /app/data/magnet.db">
+                        <div class="form-help">选择内置数据库时生效。</div>
+                    </div>
+                </div>
+                <div id="mysqlFields">
+                    <div class="form-row">
+                        <div class="form-group"><label>MySQL 主机</label><input type="text" id="dbMysqlHost" placeholder="127.0.0.1"></div>
+                        <div class="form-group"><label>MySQL 端口</label><input type="number" id="dbMysqlPort" min="1" max="65535" placeholder="3306"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>MySQL 用户名</label><input type="text" id="dbMysqlUser" placeholder="root"></div>
+                        <div class="form-group"><label>MySQL 密码</label><input type="password" id="dbMysqlPassword" placeholder="留空表示保持已保存密码"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>数据库名</label><input type="text" id="dbMysqlDatabase" placeholder="magnet_search"></div>
+                        <div class="form-group"><label>字符集</label><input type="text" id="dbMysqlCharset" placeholder="utf8mb4"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-inline">
+                            <input type="checkbox" id="dbClearPassword">
+                            <span>清空已保存的 MySQL 密码</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="save-btn" onclick="testDatabaseConnection()">测试数据库连接</button>
+                    <button class="ghost-btn" onclick="saveDatabaseConfig()">验证成功后保存并切换</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">qBittorrent 对接</div>
+                <div class="inline-status" id="qbPasswordState">尚未加载配置。</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>启用对接</label>
+                        <label class="checkbox-inline"><input type="checkbox" id="qbEnabled"><span>在搜索结果中显示“添加到 qBittorrent”按钮</span></label>
+                    </div>
+                    <div class="form-group">
+                        <label>WebUI 地址</label>
+                        <input type="text" id="qbUrl" placeholder="例如 http://127.0.0.1:8080">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>用户名</label><input type="text" id="qbUsername" placeholder="admin"></div>
+                    <div class="form-group"><label>密码</label><input type="password" id="qbPassword" placeholder="留空表示保持已保存密码"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>保存路径</label><input type="text" id="qbSavePath" placeholder="可选，例如 /downloads"></div>
+                    <div class="form-group"><label>分类 Category</label><input type="text" id="qbCategory" placeholder="可选"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>标签 Tags</label><input type="text" id="qbTags" placeholder="多个标签用英文逗号分隔"></div>
+                    <div class="form-group">
+                        <label class="checkbox-inline"><input type="checkbox" id="qbPaused"><span>添加后先暂停</span></label>
+                        <label class="checkbox-inline"><input type="checkbox" id="qbAutoTmm"><span>启用自动管理模式</span></label>
+                        <label class="checkbox-inline"><input type="checkbox" id="qbClearPassword"><span>清空已保存密码</span></label>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="save-btn" onclick="saveQBittorrentConfig()">保存 qBittorrent 配置</button>
+                    <button class="ghost-btn" onclick="testQBittorrentConnection()">测试连接</button>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">修改管理密码</div>
+                    <div class="form-group"><label>当前密码</label><input type="password" id="oldPassword" placeholder="请输入当前密码"></div>
+                    <div class="form-group"><label>新密码</label><input type="password" id="newPassword" placeholder="至少 4 位"></div>
+                    <div class="form-group"><label>确认新密码</label><input type="password" id="confirmPassword" placeholder="请再次输入新密码"></div>
+                    <button class="save-btn" onclick="changePassword()">修改密码</button>
+                </div>
+                <div class="card">
+                    <div class="card-title">系统说明</div>
+                    <ul class="tips-list">
+                        <li>默认数据库为内置 SQLite，可在验证成功后切换到 MySQL。</li>
+                        <li>数据库体积达到限制值后，爬虫会自动停机，避免继续入库。</li>
+                        <li>标题关键词、最小/最大大小过滤会在保存磁力时即时生效。</li>
+                        <li>高 CPU 配置下将自动提升 metadata 调度强度，但仍受网络环境与目标节点响应影响。</li>
+                    </ul>
+                    <div class="btn-row" style="margin-top:1rem">
+                        <button class="danger-btn" onclick="doLogout()">退出登录</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    let magnetPage = 1;
+    let selectedIds = new Set();
+    let crawlerTimer = null;
+    let crawlerConfigDirty = false;
+
+    const DARK_THEME = {
+        bg: '#0f172a',
+        card: '#1e293b',
+        cardHover: '#334155',
+        input: '#0b1220',
+        text: '#e2e8f0',
+        textSecondary: '#94a3b8',
+        border: '#334155',
+        shadow: 'rgba(15, 23, 42, 0.35)'
+    };
+
+    const LIGHT_THEME = {
+        bg: '#f8fafc',
+        card: '#ffffff',
+        cardHover: '#f1f5f9',
+        input: '#ffffff',
+        text: '#0f172a',
+        textSecondary: '#64748b',
+        border: '#dbe4f0',
+        shadow: 'rgba(15, 23, 42, 0.08)'
+    };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        bindBaseEvents();
+        await loadPublicSettings();
+        try {
+            const resp = await fetch('/api/admin/check');
+            const data = await resp.json();
+            if (data.logged_in) {
+                showAdmin();
+            }
+        } catch (e) {}
+    });
+
+    function bindBaseEvents() {
+        document.getElementById('loginPassword').addEventListener('keydown', e => {
+            if (e.key === 'Enter') doLogin();
+        });
+        document.getElementById('magnetSearch').addEventListener('keydown', e => {
+            if (e.key === 'Enter') loadMagnets(1);
+        });
+        const cpuInput = document.getElementById('cpuLimit');
+        const workersInput = document.getElementById('maxWorkers');
+        cpuInput.addEventListener('input', () => {
+            document.getElementById('cpuValue').textContent = cpuInput.value + '%';
+            crawlerConfigDirty = true;
+        });
+        workersInput.addEventListener('input', () => {
+            document.getElementById('workersValue').textContent = workersInput.value;
+            crawlerConfigDirty = true;
+        });
+        document.getElementById('themeColor').addEventListener('input', syncThemePreview);
+    }
+
+    async function loadPublicSettings() {
+        try {
+            const resp = await fetch('/api/settings/public');
+            const data = await resp.json();
+            if (data.code === 0 && data.data && data.data.site) {
+                applyTheme(data.data.site.theme_mode, data.data.site.theme_color);
+            }
+        } catch (e) {}
+    }
+
+    function resolveThemeMode(mode) {
+        if (mode === 'auto') {
+            return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        return mode === 'light' ? 'light' : 'dark';
+    }
+
+    function hexToRgb(hex) {
+        const value = (hex || '#4f46e5').replace('#', '');
+        const safe = value.length === 6 ? value : '4f46e5';
+        const r = parseInt(safe.slice(0, 2), 16);
+        const g = parseInt(safe.slice(2, 4), 16);
+        const b = parseInt(safe.slice(4, 6), 16);
+        return {r, g, b};
+    }
+
+    function darkenColor(hex, factor = 0.86) {
+        const {r, g, b} = hexToRgb(hex);
+        const clamp = n => Math.max(0, Math.min(255, Math.round(n * factor)));
+        const value = [clamp(r), clamp(g), clamp(b)].map(v => v.toString(16).padStart(2, '0')).join('');
+        return '#' + value;
+    }
+
+    function applyTheme(mode, color) {
+        const realMode = resolveThemeMode(mode || 'dark');
+        const palette = realMode === 'light' ? LIGHT_THEME : DARK_THEME;
+        const root = document.documentElement;
+        const accent = color || '#4f46e5';
+        root.style.setProperty('--primary', accent);
+        root.style.setProperty('--primary-hover', darkenColor(accent, 0.82));
+        root.style.setProperty('--accent', accent);
+        root.style.setProperty('--bg', palette.bg);
+        root.style.setProperty('--bg-card', palette.card);
+        root.style.setProperty('--bg-card-hover', palette.cardHover);
+        root.style.setProperty('--bg-input', palette.input);
+        root.style.setProperty('--text', palette.text);
+        root.style.setProperty('--text-secondary', palette.textSecondary);
+        root.style.setProperty('--border', palette.border);
+        root.style.setProperty('--shadow', palette.shadow);
+        syncThemePreview();
+        const dashChip = document.getElementById('dashThemeChip');
+        const dashMode = document.getElementById('dashThemeMode');
+        if (dashChip) dashChip.style.background = accent;
+        if (dashMode) dashMode.textContent = `${mode === 'auto' ? '跟随系统' : (realMode === 'light' ? '白天模式' : '黑夜模式')} · ${accent}`;
+    }
+
+    function syncThemePreview() {
+        const color = document.getElementById('themeColor')?.value || getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+        const chip = document.getElementById('themePreviewChip');
+        if (chip) chip.style.background = color;
+    }
+
+    async function doLogin() {
+        const password = document.getElementById('loginPassword').value;
+        try {
+            const resp = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({password})
+            });
+            if (!resp.ok) throw new Error('登录失败');
+            showAdmin();
+        } catch (e) {
+            const box = document.getElementById('loginError');
+            box.classList.remove('hide');
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginPassword').focus();
+        }
+    }
+
+    function showAdmin() {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('adminLayout').style.display = 'block';
+        switchPage('dashboard', document.querySelector('.sidebar-nav a'));
+        loadDashboard();
+        loadCrawlerStatus();
+        loadCrawlerConfig();
+        loadSiteSettings();
+        loadDatabaseConfig();
+        loadQBittorrentConfig();
+        startCrawlerStatusPolling();
+    }
+
+    async function doLogout() {
+        await fetch('/api/admin/logout', {method: 'POST'});
+        location.reload();
+    }
+
+    function switchPage(page, el) {
+        document.querySelectorAll('.page').forEach(node => node.classList.remove('active'));
+        document.getElementById('page-' + page).classList.add('active');
+        document.querySelectorAll('.sidebar-nav a').forEach(node => node.classList.remove('active'));
+        if (el) el.classList.add('active');
+        if (page === 'dashboard') loadDashboard();
+        if (page === 'crawler') { loadCrawlerStatus(); loadCrawlerConfig(); }
+        if (page === 'magnets') loadMagnets(1);
+        if (page === 'settings') { loadSiteSettings(); loadDatabaseConfig(); loadQBittorrentConfig(); }
+    }
+
+    async function loadDashboard() {
+        try {
+            const [statsResp, crawlerResp, dbResp] = await Promise.all([
+                fetch('/api/stats'),
+                fetch('/api/admin/crawler/status'),
+                fetch('/api/admin/database/config')
+            ]);
+            const stats = await statsResp.json();
+            const crawler = await crawlerResp.json();
+            const dbConfig = await dbResp.json();
+            if (stats.code === 0) {
+                document.getElementById('dashTotal').textContent = Number(stats.data.total_magnets || 0).toLocaleString();
+                document.getElementById('dashToday').textContent = Number(stats.data.today_magnets || 0).toLocaleString();
+                document.getElementById('dashDbSize').textContent = stats.data.db_size_human || '-';
+            }
+            if (crawler.code === 0) {
+                const status = crawler.data.status === 'running' ? '运行中' : '已停止';
+                document.getElementById('dashCrawlerStatus').textContent = status;
+            }
+            if (dbConfig.code === 0) {
+                const runtime = dbConfig.data.runtime || {};
+                const backend = dbConfig.data.backend === 'mysql' ? 'MySQL' : 'SQLite';
+                document.getElementById('dashDbRuntime').textContent = `当前后端：${backend}；运行路径/DSN：${runtime.target || '未提供'}；状态：${runtime.initialized ? '已初始化' : '未初始化'}`;
+            }
+        } catch (e) {}
+    }
+
+    function startCrawlerStatusPolling() {
+        if (crawlerTimer) clearInterval(crawlerTimer);
+        crawlerTimer = setInterval(loadCrawlerStatus, 3000);
+    }
+
+    async function loadCrawlerStatus() {
+        try {
+            const resp = await fetch('/api/admin/crawler/status');
+            const data = await resp.json();
+            if (data.code === 0) updateCrawlerUI(data.data);
+        } catch (e) {}
+    }
+
+    async function loadCrawlerConfig() {
+        try {
+            const resp = await fetch('/api/admin/crawler/config');
+            const data = await resp.json();
+            if (data.code !== 0) return;
+            applyCrawlerConfig(data.data, true);
+        } catch (e) {
+            showToast('读取爬虫配置失败', true);
+        }
+    }
+
+    function applyCrawlerConfig(configData, force = false) {
+        const cpuInput = document.getElementById('cpuLimit');
+        const workersInput = document.getElementById('maxWorkers');
+        if (crawlerConfigDirty && !force) return;
+        const cpuLimit = Number(configData.cpu_limit || 50);
+        const maxWorkers = Number(configData.max_workers || 5);
+        cpuInput.value = cpuLimit;
+        workersInput.value = maxWorkers;
+        document.getElementById('cpuValue').textContent = cpuLimit + '%';
+        document.getElementById('workersValue').textContent = String(maxWorkers);
+        document.getElementById('dbSizeLimitGb').value = configData.db_size_limit_gb || 0;
+        document.getElementById('saveFilterKeywords').value = configData.save_filter_keywords || '';
+        document.getElementById('saveFilterMinSizeMb').value = configData.save_filter_min_size_mb || 0;
+        document.getElementById('saveFilterMaxSizeGb').value = configData.save_filter_max_size_gb || 0;
+        crawlerConfigDirty = false;
+    }
+
+    function updateCrawlerUI(data) {
+        const isRunning = data.status === 'running';
+        const badge = document.getElementById('crawlerBadge');
+        badge.textContent = isRunning ? '运行中' : '已停止';
+        badge.className = 'status-badge ' + (isRunning ? 'running' : 'stopped');
+        document.getElementById('btnStart').classList.toggle('hide', isRunning);
+        document.getElementById('btnStop').classList.toggle('hide', !isRunning);
+        document.getElementById('crawlerStatusText').textContent = isRunning ? '爬虫正在运行，后台会持续刷新最新统计。' : '爬虫当前处于停止状态。';
+        document.getElementById('csDiscovered').textContent = Number(data.total_discovered || 0).toLocaleString();
+        document.getElementById('csSaved').textContent = Number(data.total_saved || 0).toLocaleString();
+        document.getElementById('csDuplicates').textContent = Number(data.total_duplicates || 0).toLocaleString();
+        document.getElementById('csQueue').textContent = Number(data.queue_size || 0).toLocaleString();
+        document.getElementById('csPending').textContent = Number(data.pending_queue || 0).toLocaleString();
+        document.getElementById('csDhtNodes').textContent = Number(data.dht_nodes || 0).toLocaleString();
+        document.getElementById('csErrors').textContent = Number(data.errors || 0).toLocaleString();
+        document.getElementById('csMetaOk').textContent = Number(data.total_metadata_ok || 0).toLocaleString();
+        document.getElementById('csMetaFail').textContent = Number(data.total_metadata_fail || 0).toLocaleString();
+        document.getElementById('csStartTime').textContent = data.start_time || '-';
+    }
+
+    async function startCrawler() {
+        await simplePost('/api/admin/crawler/start', {}, '爬虫已启动');
+        loadCrawlerStatus();
+    }
+
+    async function stopCrawler() {
+        await simplePost('/api/admin/crawler/stop', {}, '爬虫已停止');
+        loadCrawlerStatus();
+    }
+
+    async function saveCrawlerConfig() {
+        const payload = {
+            cpu_limit: Number(document.getElementById('cpuLimit').value),
+            max_workers: Number(document.getElementById('maxWorkers').value),
+            db_size_limit_gb: Number(document.getElementById('dbSizeLimitGb').value || 0),
+            save_filter_keywords: document.getElementById('saveFilterKeywords').value.trim(),
+            save_filter_min_size_mb: Number(document.getElementById('saveFilterMinSizeMb').value || 0),
+            save_filter_max_size_gb: Number(document.getElementById('saveFilterMaxSizeGb').value || 0)
+        };
+        try {
+            const resp = await fetch('/api/admin/crawler/config', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.code !== 0) throw new Error(data.detail || data.message || '保存失败');
+            applyCrawlerConfig(data.data || payload, true);
+            showToast(data.message || '配置已保存');
+            loadCrawlerStatus();
+        } catch (e) {
+            showToast(e.message || '保存失败', true);
+        }
+    }
+
+    async function loadSiteSettings() {
+        try {
+            const resp = await fetch('/api/admin/site-settings');
+            const data = await resp.json();
+            if (data.code !== 0) return;
+            document.getElementById('themeColor').value = data.data.theme_color || '#4f46e5';
+            document.getElementById('themeMode').value = data.data.theme_mode || 'dark';
+            applyTheme(data.data.theme_mode, data.data.theme_color);
+        } catch (e) {
+            showToast('读取主题设置失败', true);
+        }
+    }
+
+    async function saveSiteSettings() {
+        const payload = {
+            theme_color: document.getElementById('themeColor').value,
+            theme_mode: document.getElementById('themeMode').value
+        };
+        try {
+            const resp = await fetch('/api/admin/site-settings', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.code !== 0) throw new Error(data.detail || data.message || '保存失败');
+            applyTheme(data.data.theme_mode, data.data.theme_color);
+            showToast(data.message || '主题设置已保存');
+        } catch (e) {
+            showToast(e.message || '保存失败', true);
+        }
+    }
+
+    function getDatabasePayload() {
+        return {
+            backend: document.getElementById('dbBackend').value,
+            sqlite_path: document.getElementById('dbSqlitePath').value.trim(),
+            mysql_host: document.getElementById('dbMysqlHost').value.trim(),
+            mysql_port: Number(document.getElementById('dbMysqlPort').value || 3306),
+            mysql_user: document.getElementById('dbMysqlUser').value.trim(),
+            mysql_password: document.getElementById('dbMysqlPassword').value,
+            mysql_database: document.getElementById('dbMysqlDatabase').value.trim(),
+            mysql_charset: document.getElementById('dbMysqlCharset').value.trim(),
+            clear_mysql_password: document.getElementById('dbClearPassword').checked
+        };
+    }
+
+    function toggleDatabaseBackendFields() {
+        const isMysql = document.getElementById('dbBackend').value === 'mysql';
+        document.getElementById('mysqlFields').classList.toggle('hide', !isMysql);
+    }
+
+    async function loadDatabaseConfig() {
+        try {
+            const resp = await fetch('/api/admin/database/config');
+            const data = await resp.json();
+            if (data.code !== 0) return;
+            document.getElementById('dbBackend').value = data.data.backend || 'sqlite';
+            document.getElementById('dbSqlitePath').value = data.data.sqlite_path || '';
+            document.getElementById('dbMysqlHost').value = data.data.mysql_host || '';
+            document.getElementById('dbMysqlPort').value = data.data.mysql_port || 3306;
+            document.getElementById('dbMysqlUser').value = data.data.mysql_user || '';
+            document.getElementById('dbMysqlPassword').value = '';
+            document.getElementById('dbMysqlDatabase').value = data.data.mysql_database || '';
+            document.getElementById('dbMysqlCharset').value = data.data.mysql_charset || 'utf8mb4';
+            document.getElementById('dbClearPassword').checked = false;
+            toggleDatabaseBackendFields();
+            const runtime = data.data.runtime || {};
+            const backendName = data.data.backend === 'mysql' ? 'MySQL' : 'SQLite';
+            const statusEl = document.getElementById('dbRuntimeStatus');
+            statusEl.className = 'inline-status';
+            statusEl.textContent = `当前后端：${backendName}；目标：${runtime.target || '未提供'}；密码已保存：${data.data.password_set ? '是' : '否'}`;
+        } catch (e) {
+            showToast('读取数据库配置失败', true);
+        }
+    }
+
+    async function testDatabaseConnection() {
+        const payload = getDatabasePayload();
+        try {
+            const resp = await fetch('/api/admin/database/test', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.code !== 0) throw new Error(data.detail || data.message || '测试失败');
+            const box = document.getElementById('dbRuntimeStatus');
+            box.className = 'inline-status success';
+            box.textContent = data.message || '数据库连接成功';
+            showToast(data.message || '数据库连接成功');
+        } catch (e) {
+            const box = document.getElementById('dbRuntimeStatus');
+            box.className = 'inline-status error';
+            box.textContent = e.message || '数据库连接失败';
+            showToast(e.message || '数据库连接失败', true);
+        }
+    }
+
+    async function saveDatabaseConfig() {
+        const payload = getDatabasePayload();
+        try {
+            const resp = await fetch('/api/admin/database/config', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.code !== 0) throw new Error(data.detail || data.message || '保存失败');
+            showToast(data.message || '数据库配置已保存');
+            loadDatabaseConfig();
+            loadDashboard();
+        } catch (e) {
+            showToast(e.message || '保存失败', true);
+        }
+    }
+
+    async function loadQBittorrentConfig() {
+        try {
+            const resp = await fetch('/api/admin/qbittorrent/config');
+            const data = await resp.json();
+            if (data.code !== 0) return;
+            const cfg = data.data;
+            document.getElementById('qbEnabled').checked = Boolean(cfg.enabled);
+            document.getElementById('qbUrl').value = cfg.url || '';
+            document.getElementById('qbUsername').value = cfg.username || '';
+            document.getElementById('qbPassword').value = '';
+            document.getElementById('qbSavePath').value = cfg.save_path || '';
+            document.getElementById('qbCategory').value = cfg.category || '';
+            document.getElementById('qbTags').value = cfg.tags || '';
+            document.getElementById('qbPaused').checked = Boolean(cfg.paused);
+            document.getElementById('qbAutoTmm').checked = Boolean(cfg.auto_tmm);
+            document.getElementById('qbClearPassword').checked = false;
+            const box = document.getElementById('qbPasswordState');
+            box.className = 'inline-status';
+            box.textContent = cfg.password_set ? '已保存 WebUI 密码。' : '尚未保存 WebUI 密码。';
+        } catch (e) {
+            showToast('读取 qBittorrent 配置失败', true);
+        }
+    }
+
+    async function saveQBittorrentConfig() {
+        const payload = {
+            enabled: document.getElementById('qbEnabled').checked,
+            url: document.getElementById('qbUrl').value.trim(),
+            username: document.getElementById('qbUsername').value.trim(),
+            password: document.getElementById('qbPassword').value,
+            save_path: document.getElementById('qbSavePath').value.trim(),
+            category: document.getElementById('qbCategory').value.trim(),
+            tags: document.getElementById('qbTags').value.trim(),
+            paused: document.getElementById('qbPaused').checked,
+            auto_tmm: document.getElementById('qbAutoTmm').checked,
+            clear_password: document.getElementById('qbClearPassword').checked
+        };
+        try {
+            const resp = await fetch('/api/admin/qbittorrent/config', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.code !== 0) throw new Error(data.detail || data.message || '保存失败');
+            showToast(data.message || 'qBittorrent 配置已保存');
+            loadQBittorrentConfig();
+        } catch (e) {
+            showToast(e.message || '保存失败', true);
+        }
+    }
+
+    async function testQBittorrentConnection() {
+        const payload = {
+            url: document.getElementById('qbUrl').value.trim(),
+            username: document.getElementById('qbUsername').value.trim(),
+            password: document.getElementById('qbPassword').value
+        };
+        try {
+            const resp = await fetch('/api/admin/qbittorrent/test', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.code !== 0) throw new Error(data.detail || data.message || '连接失败');
+            const box = document.getElementById('qbPasswordState');
+            box.className = 'inline-status success';
+            box.textContent = data.message || '连接成功';
+            showToast(data.message || '连接成功');
+        } catch (e) {
+            const box = document.getElementById('qbPasswordState');
+            box.className = 'inline-status error';
+            box.textContent = e.message || '连接失败';
+            showToast(e.message || '连接失败', true);
+        }
+    }
+
+    async function loadMagnets(page = 1) {
+        magnetPage = page;
+        selectedIds.clear();
+        updateBatchBtn();
+        document.getElementById('selectAll').checked = false;
+        const keyword = document.getElementById('magnetSearch').value.trim();
+        try {
+            const resp = await fetch(`/api/admin/magnets?page=${magnetPage}&page_size=20&q=${encodeURIComponent(keyword)}`);
+            const data = await resp.json();
+            if (data.code === 0) renderMagnetTable(data.data);
+        } catch (e) {
+            showToast('加载磁力列表失败', true);
+        }
+    }
+
+    function renderMagnetTable(data) {
+        const tbody = document.getElementById('magnetTableBody');
+        if (!data.list || data.list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-secondary);padding:2rem">暂无数据</td></tr>';
+            document.getElementById('magnetPagination').innerHTML = '';
+            return;
+        }
+        tbody.innerHTML = data.list.map(item => `
+            <tr>
+                <td class="checkbox-cell"><input type="checkbox" value="${item.id}" onchange="toggleSelect(${item.id}, this.checked)"></td>
+                <td>${item.id}</td>
+                <td class="name-cell" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</td>
+                <td class="hash-cell" title="${item.info_hash}">${item.info_hash}</td>
+                <td>${formatSize(item.size)}</td>
+                <td>${item.file_count || 0}</td>
+                <td>${item.hot || 0}</td>
+                <td>${item.created_at || '-'}</td>
+                <td><button class="del-btn" onclick="deleteMagnet(${item.id})">删除</button></td>
+            </tr>
+        `).join('');
+        const totalPages = Math.max(1, Math.ceil((data.total || 0) / 20));
+        let html = `<div class="info">共 ${data.total || 0} 条，第 ${magnetPage}/${totalPages} 页</div><div class="pages">`;
+        html += `<button onclick="loadMagnets(${magnetPage - 1})" ${magnetPage <= 1 ? 'disabled' : ''}>上一页</button>`;
+        for (let i = Math.max(1, magnetPage - 2); i <= Math.min(totalPages, magnetPage + 2); i++) {
+            html += `<button class="${i === magnetPage ? 'active' : ''}" onclick="loadMagnets(${i})">${i}</button>`;
+        }
+        html += `<button onclick="loadMagnets(${magnetPage + 1})" ${magnetPage >= totalPages ? 'disabled' : ''}>下一页</button>`;
+        html += '</div>';
+        document.getElementById('magnetPagination').innerHTML = html;
+    }
+
+    function toggleSelect(id, checked) {
+        if (checked) selectedIds.add(id);
+        else selectedIds.delete(id);
+        updateBatchBtn();
+    }
+
+    function toggleSelectAll() {
+        const checked = document.getElementById('selectAll').checked;
+        document.querySelectorAll('#magnetTableBody input[type="checkbox"]').forEach(node => {
+            node.checked = checked;
+            const id = Number(node.value);
+            if (checked) selectedIds.add(id);
+            else selectedIds.delete(id);
+        });
+        updateBatchBtn();
+    }
+
+    function updateBatchBtn() {
+        document.getElementById('selectedCount').textContent = selectedIds.size;
+        document.getElementById('batchDeleteBtn').classList.toggle('hide', selectedIds.size === 0);
+    }
+
+    async function deleteMagnet(id) {
+        if (!confirm('确定要删除这条磁力记录吗？')) return;
+        try {
+            const resp = await fetch(`/api/admin/magnets/${id}`, {method: 'DELETE'});
+            const data = await resp.json();
+            if (!resp.ok || data.code !== 0) throw new Error(data.detail || data.message || '删除失败');
+            showToast(data.message || '已删除');
+            loadMagnets(magnetPage);
+            loadDashboard();
+        } catch (e) {
+            showToast(e.message || '删除失败', true);
+        }
+    }
+
+    async function batchDelete() {
+        if (!selectedIds.size) return;
+        if (!confirm(`确定要删除选中的 ${selectedIds.size} 条记录吗？`)) return;
+        try {
+            const resp = await fetch('/api/admin/magnets', {
+                method: 'DELETE', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ids: Array.from(selectedIds)})
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.code !== 0) throw new Error(data.detail || data.message || '删除失败');
+            showToast(data.message || '已删除');
+            selectedIds.clear();
+            loadMagnets(magnetPage);
+            loadDashboard();
+        } catch (e) {
+            showToast(e.message || '删除失败', true);
+        }
+    }
+
+    function resetDeleteRules() {
+        document.getElementById('deleteKeyword').value = '';
+        document.getElementById('deleteBefore').value = '';
+        document.getElementById('deleteMinSizeMb').value = '';
+        document.getElementById('deleteMaxSizeGb').value = '';
+    }
+
+    async function deleteByRules() {
+        const payload = {
+            keyword: document.getElementById('deleteKeyword').value.trim(),
+            created_before: document.getElementById('deleteBefore').value,
+            min_size_mb: document.getElementById('deleteMinSizeMb').value,
+            max_size_gb: document.getElementById('deleteMaxSizeGb').value
+        };
+        if (!payload.keyword && !payload.created_before && !payload.min_size_mb && !payload.max_size_gb) {
+            showToast('请至少填写一个删除条件', true);
+            return;
+        }
+        if (!confirm('规则删除不可恢复，确定继续吗？')) return;
+        try {
+            const resp = await fetch('/api/admin/magnets/delete-by-rules', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.code !== 0) throw new Error(data.detail || data.message || '删除失败');
+            showToast(data.message || '规则删除已完成');
+            loadMagnets(1);
+            loadDashboard();
+        } catch (e) {
+            showToast(e.message || '删除失败', true);
+        }
+    }
+
+    async function changePassword() {
+        const oldPwd = document.getElementById('oldPassword').value;
+        const newPwd = document.getElementById('newPassword').value;
+        const confirmPwd = document.getElementById('confirmPassword').value;
+        if (!oldPwd || !newPwd) return showToast('请填写完整密码信息', true);
+        if (newPwd !== confirmPwd) return showToast('两次密码输入不一致', true);
+        if (newPwd.length < 4) return showToast('新密码长度不能少于 4 位', true);
+        try {
+            const resp = await fetch('/api/admin/password', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({old_password: oldPwd, new_password: newPwd})
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.code !== 0) throw new Error(data.detail || data.message || '修改失败');
+            showToast(data.message || '密码已修改');
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        } catch (e) {
+            showToast(e.message || '修改失败', true);
+        }
+    }
+
+    async function simplePost(url, payload, fallbackMessage) {
+        try {
+            const resp = await fetch(url, {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload || {})
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.code !== 0) throw new Error(data.detail || data.message || fallbackMessage || '操作失败');
+            showToast(data.message || fallbackMessage || '操作成功');
+        } catch (e) {
+            showToast(e.message || fallbackMessage || '操作失败', true);
+        }
+    }
+
+    function formatSize(bytes) {
+        if (!bytes || bytes <= 0) return '-';
+        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        let value = Number(bytes);
+        let index = 0;
+        while (value >= 1024 && index < units.length - 1) {
+            value /= 1024;
+            index += 1;
+        }
+        return value.toFixed(index === 0 ? 0 : 1) + ' ' + units[index];
+    }
+
+    function escapeHtml(str) {
+        return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.className = 'toast' + (isError ? ' error' : '');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+</script>
+</body>
+</html>

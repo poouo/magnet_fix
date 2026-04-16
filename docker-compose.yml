@@ -1,0 +1,75 @@
+services:
+  magnet-search:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: magnet-search
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "6881:6881/udp"
+    environment:
+      TZ: Asia/Shanghai
+      CONFIG_PATH: /data/config.json
+      DB_PATH: /data/magnet.db
+    volumes:
+      - ./data:/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/stats', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    profiles: ["with-qb"]
+    environment:
+      TZ: Asia/Shanghai
+      PUID: 1000
+      PGID: 1000
+      WEBUI_PORT: 8080
+      TORRENTING_PORT: 6881
+    ports:
+      - "18080:8080"
+      - "16881:6881"
+      - "16881:6881/udp"
+    volumes:
+      - ./qbittorrent/config:/config
+      - ./qbittorrent/downloads:/downloads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080 >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  mysql:
+    image: mysql:8.4
+    container_name: magnet-mysql
+    restart: unless-stopped
+    profiles: ["with-mysql"]
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: magnet_search
+      MYSQL_USER: magnet
+      MYSQL_PASSWORD: magnet123456
+    ports:
+      - "13306:3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
